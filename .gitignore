@@ -129,6 +129,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+encode_hack/
 
 # Spyder project settings
 .spyderproject
