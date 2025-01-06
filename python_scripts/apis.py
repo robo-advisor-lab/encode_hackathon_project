@@ -1,4 +1,4 @@
-from sql_queries.queries import token_classifier,token_prices
+from sql_queries.queries import token_classifier,token_prices, sharpe_classifier
 from python_scripts.utils import flipside_api_results
 import pandas as pd
 from datetime import timedelta
@@ -20,6 +20,7 @@ def token_classifier_portfolio(api_key, network='arbitrum', name=None,days=60,ba
     portfolio_path = f'data/{name}_prices.csv'
 
     print(f'volume_threshold: {volume_threshold}')
+    print(f'start_date: {start_date}')
 
     if use_cached_data:
         data_struct = {'classifier':pd.read_csv(classifier_path).dropna(),
@@ -38,6 +39,8 @@ def token_classifier_portfolio(api_key, network='arbitrum', name=None,days=60,ba
             data_start_str = str(data_start.tz_convert('UTC'))
             data_start_str = str(data_start)
             data_start_str = data_start_str.split('+')[0]
+
+            print(f'data_start_str: {data_start_str}')
 
             portfolio = tokens['token_address'].unique()
             
@@ -58,7 +61,9 @@ def token_classifier_portfolio(api_key, network='arbitrum', name=None,days=60,ba
                                 'original_hour':tokens['original_latest_hour'],
                                 }
         else:
-            classifier = token_classifier(network,days,volume_threshold,backtest_period)
+            print(f'start_date: {start_date}')
+            # start_date,network,days,volume_threshold
+            classifier = sharpe_classifier(start_date, network,days,volume_threshold) 
             tokens = flipside_api_results(classifier,api_key)
             
             tokens['latest_hour'] = pd.to_datetime(tokens['latest_hour'])
