@@ -1,10 +1,9 @@
 from openbb import obb
 import pandas as pd
 import os
+import json
 import datetime as dt
 from python_scripts.utils import prepare_data_for_simulation
-
-#Helper functions for OpenBB data
 
 def get_interest_rate_data():
     """
@@ -13,7 +12,11 @@ def get_interest_rate_data():
         dict: A dictionary containing interest rate data for immediate, short, and long durations.
     """
     data = {}
-    durations = {'immediate': 'Overnight Interbank Rate', 'short': '3-Month Rate', 'long': '10-Year Rate'}
+    durations = {
+        'immediate': 'Overnight Interbank Rate',
+        'short': '3-Month Rate',
+        'long': '10-Year Rate'
+    }
 
     for duration, description in durations.items():
         data[description] = obb.economy.interest_rates(
@@ -22,7 +25,6 @@ def get_interest_rate_data():
             duration=duration,
             frequency='monthly'
         )
-
     return data
 
 def get_cpi_data():
@@ -38,9 +40,10 @@ def get_cpi_data():
     )
     return cpi_data
 
-def clean_df(df,start_date):
-    # We don't need all the data, and we also want to resample to hour to match the trade_script
-    
+def clean_df(df, start_date):
+    """
+    Trims the DataFrame to rows starting from `start_date`.
+    """
     df_copy = df.copy()
     df_copy.index = pd.to_datetime(df_copy.index)
     
@@ -50,59 +53,97 @@ def clean_df(df,start_date):
     df_copy = df_copy[df_copy.index >= start_date]
     return df_copy
 
-def main(current_date,api=True):
-    # today_utc = dt.datetime.now(dt.timezone.utc) 
-    # formatted_today_utc = today_utc.strftime('%Y-%m-%d %H:00:00')
-    # Fetch Interest Rate Data
-    if api == True:
+def prepare_data_for_simulation(df, start_date, end_date):
+    """
+    Placeholder for your data prep function.
+    Assume it returns a DataFrame with the same columns, just an example.
+    """
+    # Implement your data processing logic here
+    return df
+
+def main(current_date, api=True):
+    """
+    Main function that fetches/loads data, prepares it, and stores/loads CSV files.
+    """
+    durations = {
+        'immediate': 'Overnight Interbank Rate',
+        'short': '3-Month Rate',
+        'long': '10-Year Rate'
+    }
+
+    if api:
         print("Fetching Interest Rate Data...")
         interest_rate_data = get_interest_rate_data()
-        # for key, value in interest_rate_data.items():
-        #     print(f"{key}:\n{value}\n")
-    
-        # Fetch CPI Data
         print("Fetching CPI Data...")
         cpi_data = get_cpi_data()
-        # print(f"CPI Data:\n{cpi_data}\n")
-    
+
+        # Convert fetched data into DataFrames
         interest_rate_dict = {}
-    
-        for key in interest_rate_data.keys():
-            interest_rate_dict[key] = interest_rate_data[key].to_df()
-        print(interest_rate_dict)
-    
+        for key, dataset in interest_rate_data.items():
+            df = dataset.to_df()
+            interest_rate_dict[key] = df
+
         cpi_data_df = cpi_data.to_df()
-        cpi_data_df
-    
         cpi_data_df_clean = clean_df(cpi_data_df, 'Max')
-    
+
+        # Clean each DF in interest_rate_dict
         for key in interest_rate_dict.keys():
             interest_rate_dict[key] = clean_df(interest_rate_dict[key], 'Max')
-        print(interest_rate_dict)
-    
-        cpi_data_df_clean_prepared = prepare_data_for_simulation(cpi_data_df_clean, str(cpi_data_df_clean.index.min()), current_date)
-    
-        cpi_data_df_clean_prepared
-    
+
+        # Prepare data for simulation
+        cpi_data_df_clean_prepared = prepare_data_for_simulation(
+            cpi_data_df_clean,
+            str(cpi_data_df_clean.index.min()),
+            current_date
+        )
         for key in interest_rate_dict.keys():
-            interest_rate_dict[key] = prepare_data_for_simulation(interest_rate_dict[key], str(interest_rate_dict[key].index.min()), current_date)
-        print(interest_rate_dict)
-    
-        interest_rate_dict['10-Year Rate']
+            interest_rate_dict[key] = prepare_data_for_simulation(
+                interest_rate_dict[key],
+                str(interest_rate_dict[key].index.min()),
+                current_date
+            )
 
-        with open('../data/interest_rate_dict.json', 'w') as f:
-            json.dump(interest_rate_dict, f)
-            
-        cpi_data_df_clean_prepared.to_csv('..data/cpi_data_df_clean_prepared.csv',index=False)
+        # -----------------------------------------
+        # SAVE TO CSV
+        # -----------------------------------------
+        # 1) Save each interest rate DataFrame to its own CSV
+        #    Convert "Overnight Interbank Rate" -> "overnight_interbank_rate.csv", etc.
+        for key, df in interest_rate_dict.items():
+            filename = key.lower().replace(" ", "_").replace("-", "_").replace("/", "_")
+            csv_name = f"interest_rate_dict_{filename}.csv"
+            df.to_csv(csv_name)
+
+        # 2) Save CPI data
+        cpi_data_df_clean_prepared.to_csv('cpi_data_df_clean_prepared.csv', index=False)
+
+        return interest_rate_dict, cpi_data_df_clean_prepared
+
     else:
-        with open('../data/interest_rate_dict.json', 'r') as f:
-            interest_rate_dict = json.load(f)
-            
-        cpi_data_df_clean_prepared = pd.read_csv('..data/interest_rate_dict.csv')
+        print("Loading data from CSVs...")
 
-    return interest_rate_dict, cpi_data_df_clean_prepared
+        # -----------------------------------------
+        # LOAD FROM CSV
+        # -----------------------------------------
+        # Rebuild interest_rate_dict from CSVs. We'll rely on the known keys in durations.
+        interest_rate_dict = {}
+        for description in durations.values():
+            filename = description.lower().replace(" ", "_").replace("-", "_").replace("/", "_")
+            csv_name = f"interest_rate_dict_{filename}.csv"
+            if os.path.exists(csv_name):
+                df = pd.read_csv(csv_name)
+                # If you need the date as index, do something like:
+                # df['Date'] = pd.to_datetime(df['Date'])
+                # df.set_index('Date', inplace=True)
+                interest_rate_dict[description] = df
+            else:
+                print(f"Warning: {csv_name} not found.")
+                interest_rate_dict[description] = pd.DataFrame()
 
+        # Load CPI data
+        if os.path.exists('cpi_data_df_clean_prepared.csv'):
+            cpi_data_df_clean_prepared = pd.read_csv('cpi_data_df_clean_prepared.csv')
+        else:
+            print("Warning: cpi_data_df_clean_prepared.csv not found.")
+            cpi_data_df_clean_prepared = pd.DataFrame()
 
-
-
-
+        return interest_rate_dict, cpi_data_df_clean_prepared

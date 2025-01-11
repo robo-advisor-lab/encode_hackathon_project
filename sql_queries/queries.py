@@ -710,6 +710,7 @@ def latest_portfolio_metrics(token_addresses, network, days, start_date):
         lpd.latest_price,
         lpd.rolling_7d_avg,
         lpd.rolling_30d_avg,
+        p60d.sixty_day_price,
         (lpd.latest_price - p60d.sixty_day_price) / p60d.sixty_day_price AS token_return,
         ad.tbill_60d AS risk_free_rate,
         (
@@ -778,6 +779,7 @@ def latest_portfolio_metrics(token_addresses, network, days, start_date):
         lsd.stddev_30d,
         erc.rolling_7d_avg,
         erc.rolling_30d_avg,
+        erc.sixty_day_price,
         erc.excess_return / NULLIF(lsd.stddev_30d, 0) AS sharpe_ratio
       FROM
         excess_return_calc erc
@@ -790,6 +792,7 @@ def latest_portfolio_metrics(token_addresses, network, days, start_date):
       s.excess_return,
       s.latest_price,
       s.latest_hour,
+      s.sixty_day_price,
       s.stddev_30d,
       s.rolling_7d_avg,
       s.token_return,

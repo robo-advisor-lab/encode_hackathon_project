@@ -1,0 +1,2 @@
+account_address,initial_weth_balance,final_weth_balance,purchases
+0xFA475d5FB90C4b90D929a64732DA6De38a966416,0.000449102254226611,1.2254226611e-08,"{'LAVA': 0.4, 'MAGIC': 0.0, 'STG': 0.35, 'USDC': 0.25, 'DAI': 0.0, 'ARB': 0.0, 'USDT': 0.0, 'CRV': 0.0, 'ZRO': 0.0}"
