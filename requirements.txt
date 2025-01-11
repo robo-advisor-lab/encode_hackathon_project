@@ -128,3 +128,5 @@ numpy
 diskcache
 streamlit
 web3
+uniswap-python
+openbb
