@@ -117,13 +117,6 @@ We welcome contributions to improve this project! Fork the repository, make your
 
 Suggestions and new ideas are greatly appreciated.
 
-
-
-License
-
-This project is open-sourced under the MIT License. See the LICENSE file for details.
-
-
 Thank you for exploring this project. Let’s redefine onchain trading together! 🚀
 
 ---
