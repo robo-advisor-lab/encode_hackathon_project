@@ -7,88 +7,98 @@ Overview
 Welcome to the repository for our project on leveraging Large Language Models (LLMs) for real-time onchain trading decisions. This system utilizes LLMs to analyze onchain and offchain data, make portfolio allocation decisions, and execute trades autonomously. It aims to bridge the gap for blockchain users without automation frameworks by offering a personal agent for trading management.
 
 
-Features Used
 
-Onchain Data: Wallet transactions, token movements, and smart contract interactions.
+Features Used:
 
-Offchain Data: Real-time market prices, trading news, and sentiment analysis.
+ - Onchain Data: Wallet transactions, token movements, and smart contract interactions.
 
-Macro Data: Real-time interest rate and cpi data
+- Offchain Data: Real-time market prices, trading news, and sentiment analysis.
 
-LLM-Driven Reasoning: Logical steps for trade proposals based on gathered data.
+- Macro Data: Real-time interest rate and cpi data from OpenBB
 
-Trade Execution: Automated buy, sell, modify, or hold actions via blockchain platforms.
+- LLM-Driven Reasoning: Logical steps for trade proposals based on gathered data.
+
+- Trade Execution: Automated buy, sell, modify, or hold actions via blockchain platforms.
+
 
 
 Methodology
 
 
-Data Collection:
+1. Data Collection:
 
 
-Onchain data fetched via tools like Uniswap API and Flipside Crypto SQL.
+- Onchain data fetched via tools like Uniswap API and Flipside Crypto SQL.
 
-Offchain data gathered from market APIs and news feeds like OpenBB
-
-
-Analysis and Modeling:
+- Offchain data gathered from market APIs and news feeds like OpenBB
 
 
-LLMs analyze inputs for reasoning and trade decisions.
-
-Python-based integration ensures smooth data preprocessing and model execution.
+2. Analysis and Modeling:
 
 
-Execution Framework:
+- LLMs analyze inputs for reasoning and trade decisions.
+
+- Python-based integration ensures smooth data preprocessing and model execution.
 
 
-Trades are settled on blockchain platforms (Uniswap by default).
+3. Execution Framework:
+
+
+- Trades are settled on blockchain platforms (Uniswap by default).
+
+
 
 
 Key Features and Findings
 
 
-Data Experimentation: Combined multiple data sources for trade proposal improvements.
+- Data Experimentation: Combined multiple data sources for trade proposal improvements.
 
-Reasoning Steps: Demonstrated clear, step-by-step trade logic.
+- Reasoning Steps: Demonstrated clear, step-by-step trade logic.
 
-Impactful Trades: Focused on maximizing portfolio returns with minimal risk.
+- Impactful Trades: Focused on maximizing portfolio returns with minimal risk.
 
-Real-Time Execution: Optimized smaller models for decisions within 2 seconds.
+- Real-Time Execution: Optimized smaller models for decisions within 2 seconds.
+
 
 
 Project Structure
 
 
-/data: Raw and processed data for model training and evaluation.
+- /data: Raw and processed data for model training and evaluation.
 
-/src: Source code for data analysis, LLM integration, and trade execution.
+- /src: Source code for data analysis, LLM integration, and trade execution.
 
-/notebooks: Jupyter notebooks showcasing experiments and results.
+- /notebooks: Jupyter notebooks showcasing experiments and results.
 
-requirements.txt: Python dependencies for the project.
+- requirements.txt: Python dependencies for the project.
+
 
 
 Applications
 
 
-Automated Portfolio Management: Optimize asset allocation using LLM reasoning.
+- Automated Portfolio Management: Optimize asset allocation using LLM reasoning.
 
-Personalized Trading Agent: Tailor trade decisions to user preferences.
+- Personalized Trading Agent: Tailor trade decisions to user preferences.
 
-Trade Evaluation Framework: Analyze trade proposals for transparency and quality.
+- Trade Evaluation Framework: Analyze trade proposals for transparency and quality.
+
 
 
 Technologies
 
 
-LLM Integration: OpenAI GPT-4o and alternatives.
+- LLM Integration: OpenAI GPT-4o and alternatives.
 
-Blockchain Tools: Uniswap API, Flipside Crypto SQL.
+- Blockchain Tools: Uniswap API, Flipside Crypto SQL.
+  
+- Market/News Tools: OpenBB
 
-Development Frameworks: Python, Jupyter.
+- Development Frameworks: Python, Jupyter.
 
-Deployment: Streamlit.
+- Deployment: Streamlit.
+
 
 
 Contribution
@@ -97,6 +107,7 @@ Contribution
 We welcome contributions to improve this project! Fork the repository, make your changes, and submit a pull request. 
 
 Suggestions and new ideas are greatly appreciated.
+
 
 
 License
