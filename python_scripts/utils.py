@@ -455,3 +455,36 @@ def calculate_sortino_ratio(df, risk_free, window_size):
     all_time_sortino = df.apply(lambda col: sortino_ratio(col.dropna(), risk_free))
 
     return rolling_sortino, all_time_sortino
+
+def composition_difference_exceeds_threshold(latest_comp, new_compositions, threshold=0.05):
+    """
+    Check if the difference between the latest and new compositions exceeds the threshold.
+
+    Parameters:
+    - latest_comp: Dict of the current portfolio composition.
+    - new_compositions: Dict of the target portfolio composition.
+    - threshold: The tolerance threshold (default 5%).
+
+    Returns:
+    - True if the difference exceeds the threshold for any token, False otherwise.
+    """
+    print(f'new_compositions: {new_compositions}')
+
+    # Normalize latest_comp keys by stripping spaces
+    latest_comp_normalized = {token.strip(): value for token, value in latest_comp.items()}
+    print(f'latest_comp (normalized): {latest_comp_normalized}')
+
+    for token in new_compositions:
+        latest_value = latest_comp_normalized.get(token, 0)
+        new_value = new_compositions.get(token, 0)
+        
+        # Calculate the absolute difference
+        difference = abs(latest_value - new_value)
+        
+        print(f"{token}: Latest: {latest_value:.6f}, New: {new_value:.6f}, Difference: {difference:.6f}")
+        
+        # Check if the difference exceeds the threshold
+        if difference > threshold:
+            return True
+
+    return False

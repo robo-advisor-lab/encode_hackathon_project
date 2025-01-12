@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🤖 LLM Rebalancer</title>
+    <style>
+      body {
+        font-family: "Courier New", Courier, monospace;
+        background-color: #f0f0f0;
+        color: #000;
+        margin: 0;
+        padding: 20px;
+      }
+      h1,
+      h2 {
+        color: #333;
+        text-align: center;
+        border-bottom: 2px solid #333;
+      }
+      h1 {
+        margin-top: 0;
+        padding-bottom: 10px;
+      }
+      h2 {
+        padding-top: 20px;
+        padding-bottom: 10px;
+      }
+      div.graph-container {
+        background-color: #fff;
+        padding: 20px;
+        border: 2px solid #000;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+      }
+      div.graph-container + div.graph-container {
+        margin-top: 20px;
+      }
+      .results-container {
+        margin: 20px auto;
+        padding: 20px;
+        max-width: 600px;
+        background-color: #fff;
+        border: 2px solid #000;
+      }
+      ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+      li {
+        margin-bottom: 5px;
+      }
+      .collapsible {
+        background-color: #f9f9f9;
+        color: #333;
+        cursor: pointer;
+        padding: 10px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .collapsible:after {
+        content: '+';
+        font-size: 16px;
+        float: right;
+      }
+      .collapsible.active:after {
+        content: '-';
+      }
+      .content {
+        padding: 10px 20px;
+        display: none;
+        overflow: hidden;
+        background-color: #f4f4f4;
+        border-top: 1px solid #ddd;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #555;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        font-size: 1.5em;
+        color: #333;
+      }
+      .version-info {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 1em;
+        color: #555;
+      }
+      div.graph-container {
+        background-color: #fff;
+        padding: 20px;
+        border: 2px solid #000;
+        margin: 20px auto; /* Center the chart horizontally */
+        display: flex;
+        justify-content: center; /* Horizontally center the graph */
+        align-items: center; /* Vertically center the graph */
+        min-height: 400px; /* Optional: Ensure consistent height for the container */
+        max-width: 800px; /* Limit the container width */
+        width: 90%; /* Allow some flexibility for smaller screens */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow for aesthetics */
+        border-radius: 10px; /* Optional: Add rounded corners */
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+      function showLoading() {
+        document.getElementById("loading").style.display = "block";
+      }
+
+      function hideLoading() {
+        document.getElementById("loading").style.display = "none";
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const collapsibles = document.querySelectorAll(".collapsible");
+        collapsibles.forEach((collapsible) => {
+          collapsible.addEventListener("click", () => {
+            collapsible.classList.toggle("active");
+            const content = collapsible.nextElementSibling;
+            if (content.style.display === "block") {
+              content.style.display = "none";
+            } else {
+              content.style.display = "block";
+            }
+          });
+        });
+
+        fetchData();
+      });
+
+      function fetchData() {
+        showLoading();
+        fetch("/get_data") // Adjust endpoint as needed
+          .then((response) => response.json())
+          .then((data) => {
+            hideLoading();
+            updatePage(data);
+          })
+          .catch((error) => {
+            console.error("Error fetching data:", error);
+            hideLoading();
+          });
+      }
+
+      function updatePage(data) {
+        const resultsContainer = document.getElementById("results-container");
+        const results = data.results;
+
+        resultsContainer.innerHTML = "";
+
+        const keyOrder = [
+          "last run (UTC)",
+          "next run (UTC)",
+          "rebalance frequency (days)",
+          "address",
+          "portfolio balance",
+          "chain"
+        ];
+
+        const list = document.createElement("ul");
+        keyOrder.forEach((key) => {
+          if (results[key]) {
+            const listItem = document.createElement("li");
+            if (key === "address") {
+              const link = document.createElement("a");
+              link.href = `https://arbiscan.io/address/${results[key]}`;
+              link.textContent = results[key];
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              listItem.textContent = `${key}: `;
+              listItem.appendChild(link);
+            } else {
+              listItem.textContent = `${key}: ${results[key]}`;
+            }
+            list.appendChild(listItem);
+          }
+        });
+        resultsContainer.appendChild(list);
+
+        // User Message and System Prompt
+        const userMessageContainer = document.getElementById("user-message");
+        const systemPromptContainer = document.getElementById("system-prompt");
+
+        userMessageContainer.innerText = results.user_message || "No user message.";
+        systemPromptContainer.innerText = results.system_prompt || "No system prompt.";
+
+        // Plotly Graphs
+        Plotly.newPlot("graph_1", JSON.parse(data.graph_1).data, JSON.parse(data.graph_1).layout);
+        Plotly.newPlot("graph_2", JSON.parse(data.graph_2).data, JSON.parse(data.graph_2).layout);
+        Plotly.newPlot("graph_3", JSON.parse(data.graph_3).data, JSON.parse(data.graph_3).layout);
+      }
+    </script>
+  </head>
+  <body>
+    <h1>🤖 LLM Rebalancer</h1>
+    <div class="loading" id="loading">Fetching latest data...</div>
+    <div class="graph-container" id="graph_1"></div>
+    <div class="graph-container" id="graph_2"></div>
+    <div class="graph-container" id="graph_3"></div>
+    <h2>Results (Data Updates Daily)</h2>
+    <div class="results-container" id="results-container"></div>
+    <div class="container">
+      <button class="collapsible">📜 User Message</button>
+      <div class="content" id="user-message"></div>
+    </div>
+    <div class="container">
+      <button class="collapsible">🤖 System Prompt</button>
+      <div class="content" id="system-prompt"></div>
+    </div>
+    <footer
+      style="text-align: center; margin-top: 20px; padding: 10px; background-color: #333; color: #fff;">
+      <p>
+        Github:
+        <a href="https://github.com/robo-advisor-lab/encode_hackathon_project" style="color: #fff"
+          >https://github.com/robo-advisor-lab/encode_hackathon_project</a
+        >
+      </p>
+    </footer>
+  </body>
+</html>

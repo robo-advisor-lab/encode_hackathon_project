@@ -130,3 +130,5 @@ streamlit
 web3
 uniswap-python
 openbb
+flask
+apscheduler

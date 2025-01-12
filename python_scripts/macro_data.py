@@ -110,11 +110,11 @@ def main(current_date, api=True):
         #    Convert "Overnight Interbank Rate" -> "overnight_interbank_rate.csv", etc.
         for key, df in interest_rate_dict.items():
             filename = key.lower().replace(" ", "_").replace("-", "_").replace("/", "_")
-            csv_name = f"interest_rate_dict_{filename}.csv"
+            csv_name = f"data/interest_rate_dict_{filename}.csv"
             df.to_csv(csv_name)
 
         # 2) Save CPI data
-        cpi_data_df_clean_prepared.to_csv('cpi_data_df_clean_prepared.csv', index=False)
+        cpi_data_df_clean_prepared.to_csv('data/cpi_data_df_clean_prepared.csv', index=False)
 
         return interest_rate_dict, cpi_data_df_clean_prepared
 
@@ -128,7 +128,7 @@ def main(current_date, api=True):
         interest_rate_dict = {}
         for description in durations.values():
             filename = description.lower().replace(" ", "_").replace("-", "_").replace("/", "_")
-            csv_name = f"interest_rate_dict_{filename}.csv"
+            csv_name = f"data/interest_rate_dict_{filename}.csv"
             if os.path.exists(csv_name):
                 df = pd.read_csv(csv_name)
                 # If you need the date as index, do something like:
@@ -140,8 +140,8 @@ def main(current_date, api=True):
                 interest_rate_dict[description] = pd.DataFrame()
 
         # Load CPI data
-        if os.path.exists('cpi_data_df_clean_prepared.csv'):
-            cpi_data_df_clean_prepared = pd.read_csv('cpi_data_df_clean_prepared.csv')
+        if os.path.exists('data/cpi_data_df_clean_prepared.csv'):
+            cpi_data_df_clean_prepared = pd.read_csv('data/cpi_data_df_clean_prepared.csv')
         else:
             print("Warning: cpi_data_df_clean_prepared.csv not found.")
             cpi_data_df_clean_prepared = pd.DataFrame()
