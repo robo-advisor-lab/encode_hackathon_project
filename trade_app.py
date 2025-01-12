@@ -746,7 +746,9 @@ if __name__ == "__main__":
     print('Starting Flask app...')
     scheduler.start()
     logger.info("Scheduler started.")
-    app.run(debug=True, use_reloader=False, port=5012)
+    port = int(os.environ.get("PORT", 8050))
+    host='0.0.0.0'
+    app.run(debug=True, use_reloader=False, port=port, host=host)
     # Since app.run() is blocking, the following line will not execute until the app stops:
     logger.info("Flask app has stopped.")
     print('Flask app has stopped.')

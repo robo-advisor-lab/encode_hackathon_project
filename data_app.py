@@ -60,6 +60,7 @@ from sql_queries.queries import latest_portfolio_metrics
 from python_scripts.utils import fetch_and_process_tbill_data, prepare_data_for_simulation, calculate_cumulative_return
 
 def get_latest_model_data(base_url='http://127.0.0.1:5012'):
+    # pass https://llm-rebalancer.onrender.com as base_url?
     url = f'{base_url}/cached-data'
     response = requests.get(url)
     data = response.json()
