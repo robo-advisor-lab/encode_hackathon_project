@@ -132,3 +132,4 @@ uniswap-python
 openbb
 flask
 apscheduler
+pyngrok

@@ -27,6 +27,8 @@ from python_scripts.utils import fetch_and_process_tbill_data, prepare_data_for_
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from pyngrok import ngrok, conf, installer
+import ssl
 import time
 
 import logging
@@ -36,6 +38,34 @@ import requests
 import plotly.express as px
 
 from diskcache import Cache
+
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
+
+# Set the path to the ngrok executable installed by Chocolatey
+ngrok_path = "C:\\ProgramData\\chocolatey\\bin\\ngrok.exe"
+
+# Update the pyngrok configuration with the ngrok path
+pyngrok_config = conf.PyngrokConfig(ngrok_path=ngrok_path)
+
+# Check if ngrok is installed at the specified path, if not, install it using the custom SSL context
+
+if not os.path.exists(pyngrok_config.ngrok_path):
+    installer.install_ngrok(pyngrok_config.ngrok_path, context=context)
+
+# Configure ngrok with custom SSL context
+conf.set_default(pyngrok_config)
+conf.get_default().ssl_context = context
+
+ngrok_token = os.getenv('ngrok_token')
+
+# Set your ngrok auth token
+ngrok.set_auth_token(ngrok_token)
+
+# Start ngrok
+public_url = ngrok.connect(5000, pyngrok_config=pyngrok_config, hostname="www.optimizerfinance.com").public_url
+print("ngrok public URL:", public_url)
 
 load_dotenv()
 scheduler = BackgroundScheduler()
@@ -50,8 +80,8 @@ GATEWAY = os.getenv('ARBITRUM_GATEWAY')
 cache = Cache('classifier_data')
 data_cache = Cache('data_cache')
 
-historical_data = cache.get(f'historical_data', pd.DataFrame())
-historical_port_values = cache.get(f'historical_port_values', pd.DataFrame())
+historical_data = data_cache.get(f'historical_data', pd.DataFrame())
+historical_port_values = data_cache.get(f'historical_port_values', pd.DataFrame())
 
 from python_scripts.web3_utils import *
 from python_scripts.apis import token_classifier_portfolio, flipside_api_results
@@ -214,7 +244,7 @@ def update_historical_data(live_comp):
     new_data = pd.DataFrame([live_comp])
     historical_data = pd.concat([historical_data, new_data]).reset_index(drop=True)
     historical_data.drop_duplicates(subset='date', keep='last', inplace=True)
-    cache.set(f'historical_data', historical_data)
+    data_cache.set(f'historical_data', historical_data)
 
 def update_portfolio_data(values):
     global historical_port_values
@@ -222,7 +252,7 @@ def update_portfolio_data(values):
     values = pd.DataFrame([values])
     historical_port_values = pd.concat([historical_port_values, values]).reset_index(drop=True)
     historical_port_values.drop_duplicates(subset='date', keep='last', inplace=True)
-    cache.set(f'historical_port_values', historical_port_values)
+    data_cache.set(f'historical_port_values', historical_port_values)
 
 def update_price_data(values):
     global oracle_prices
@@ -238,7 +268,7 @@ def update_price_data(values):
     oracle_prices = pd.concat([oracle_prices, values]).drop_duplicates(subset='hour', keep='last').reset_index(drop=True)
     
     # Cache the updated oracle_prices
-    cache.set(f'oracle_prices', oracle_prices)
+    data_cache.set(f'oracle_prices', oracle_prices)
 
     print(f'Updated oracle_prices:\n{oracle_prices}')
 
@@ -251,7 +281,7 @@ def update_model_actions(actions):
     model_actions.drop_duplicates(subset='Date', keep='last', inplace=True)
     cache.set(f'actions', model_actions)
 
-async def get_data():
+def get_data():
     model_data = get_latest_model_data()
 
     next_run = model_data['next_run (UTC)']
@@ -400,10 +430,13 @@ async def get_data():
     )
     # fig1.show()
 
+    historical_port_values['date'] = pd.to_datetime(historical_port_values['date'])
+
+    daily_vals = historical_port_values.set_index('date').resample('D').last().ffill().reset_index()
 
     # %%
     fig2 = px.line(
-        historical_port_values,
+        daily_vals,
         x='date',
         y='Portfolio Value',
         title=f"Portfolio Value ($) Time Series Through {formatted_today_utc}",
@@ -412,13 +445,27 @@ async def get_data():
 
     # fig2.show()
 
+    historical_data['date'] = pd.to_datetime(historical_data['date'])
+
+    daily_data = historical_data.set_index('date').resample('D').last().ffill().reset_index()
+
     # %%
-    melted = historical_data.melt(id_vars=['date'], 
+    melted = daily_data.melt(id_vars=['date'], 
                                 var_name='Asset', 
                                 value_name='Weight')
 
     # %%
     # melted = melted[melted['Weight'] > 0]
+
+    # melted['date'] = pd.to_datetime(melted['date'])
+
+    # resampled = melted.set_index('date').groupby([melted.index,'Asset']).resample('D').last().drop_duplicates()
+    # resampled = resampled.drop(columns='Asset').reset_index()
+    # Drop the duplicated 'Asset' column (if it exists in the index)
+
+    # daily_comp = melted.set_index('date').resample('D').last().ffill().reset_index()
+
+    import pdb; pdb.set_trace()
 
     # %%
     fig3 = px.bar(
@@ -433,8 +480,9 @@ async def get_data():
     # fig3.show()
 
     results = {
-        'last run (UTC)': last_run,
-        'next run (UTC)': pd.to_datetime(next_run).strftime('%Y-%m-%d %H:00:00'),
+        'last model run (UTC)': last_run,
+        'next model run (UTC)': pd.to_datetime(next_run).strftime('%Y-%m-%d %H:00:00'),
+        'data version': formatted_today_utc,
         'rebalance frequency (days)':days,
         'address':ACCOUNT_ADDRESS,
         'portfolio balance': f"${available_balance:,.2f}",
@@ -459,7 +507,7 @@ def create_app():
     def fetch_and_cache_data():
         with app.app_context():
             print("Scheduled task running.")
-            asyncio.run(get_data())
+            get_data()
 
     scheduler.add_job(
         fetch_and_cache_data,
@@ -522,6 +570,6 @@ if __name__ == "__main__":
     app = create_app()
     print('Starting Flask app...')
     scheduler.start()
-    app.run(debug=True, use_reloader=False, port=5013)
+    app.run(debug=True, use_reloader=False, port=5000)
     # Since app.run() is blocking, the following line will not execute until the app stops:
     print('Flask app has stopped.')
