@@ -4,8 +4,7 @@ Let the Agent Decide: LLM-Driven Onchain Trading System
 Overview
 
 
-Welcome to the repository for our project on leveraging Large Language Models (LLMs) for real-time onchain trading decisions. This system utilizes LLMs to analyze onchain and offchain data, make portfolio allocation decisions, and execute trades autonomously. It aims to bridge the gap for blockchain users without automation frameworks by offering a personal agent for trading management.
-
+Welcome to the repository for our project on leveraging Large Language Models (LLMs) for real-time onchain trading decisions. This system utilizes LLMs to analyze onchain and offchain data, make portfolio allocation decisions, and execute trades autonomously. It aims to bridge the gap for blockchain users without automation frameworks by offering a personal agent for trading management.  The LLM is currently live on mainnet and is tasked with periodically rebalancing an Arbitrum wallet.  
 
 
 Features Used:
@@ -67,11 +66,19 @@ Project Structure
 
 - /data: Raw and processed data for model training and evaluation.
 
-- /src: Source code for data analysis, LLM integration, and trade execution.
-
 - /notebooks: Jupyter notebooks showcasing experiments and results.
 
+- /templates: HTML/CSS/JS used for the front end.
+
+- /python_scripts: Python helper functions.
+
+- /sql_queries: Dynamic SQL queries we pass to the Flipside API.
+
 - requirements.txt: Python dependencies for the project.
+
+- trade_app.py: The Python script which contains the LLM trading logic; this re-runs every 7 days.
+
+- data_app.py: The Python script which contains the LLM portfolio data; this re-runs daily.
 
 
 
@@ -89,15 +96,17 @@ Applications
 Technologies
 
 
-- LLM Integration: OpenAI GPT-4o and alternatives.
+- LLM Integration: OpenAI GPT-4o.
 
-- Blockchain Tools: Uniswap API, Flipside Crypto SQL.
+- Blockchain Tools: Web3.py, Uniswap-Python, Flipside Crypto SQL.
   
-- Market/News Tools: OpenBB
+- Market/News Tools: OpenBB.
 
-- Development Frameworks: Python, Jupyter.
+- Front-End: HTML, CSS, JS.
 
-- Deployment: Streamlit.
+- Back-End: Python, SQL.
+
+- Deployment: Ngrok.
 
 
 
@@ -108,16 +117,9 @@ We welcome contributions to improve this project! Fork the repository, make your
 
 Suggestions and new ideas are greatly appreciated.
 
-
-
-License
-
-This project is open-sourced under the MIT License. See the LICENSE file for details.
-
-
 Thank you for exploring this project. Let’s redefine onchain trading together! 🚀
 
-
+---
 
 Flipside EDA: https://flipsidecrypto.xyz/studio/queries/111ce9b8-eaf9-4364-bae6-079c0b99c424
 
@@ -125,4 +127,4 @@ You will need to create a new virtual environment, run pip install -r requiremen
 
 https://medium.com/@WamiqRaza/how-to-create-virtual-environment-jupyter-kernel-python-6836b50f4bf4
 
-Environment variables are accessed via .env file in root directory. You will need to create your own and fill the OPENAI_API_KEY variable with your own OpenAI key.
+Environment variables are accessed via .env file in root directory. You will need to create your own and fill the variables with your own keys.
